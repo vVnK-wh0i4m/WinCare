@@ -8,11 +8,11 @@
 
 | Hạng mục | Thực tế |
 |---|---|
-| OS phát triển | Linux x86_64 (không có Windows/WSL) |
-| PowerShell kiểm thử | pwsh 7.4.6 (Linux) — dùng cho parse-check, Pester, build |
-| Pester | 6.2.0 (PSGallery) |
-| Trình duyệt xác minh | Agent Browser (Chromium headless) chống localhost:3000 |
-| Máy Windows thật | **KHÔNG CÓ** — xem mục 5 |
+| OS phát triển | Linux x86_64 (các phiên trước) + Windows (phiên đóng gói/push hiện tại) |
+| PowerShell kiểm thử | pwsh 7.4.6 (Linux, kết quả lịch sử) / pwsh 7.7.0 (Windows, build lại dist) |
+| Pester | 6.2.0 trên Linux (kết quả 24 test); máy Windows hiện tại chỉ có Pester 3.4.0 nên không chạy lại bộ test 5+ |
+| Trình duyệt xác minh | Không có trong phiên này — landing page là file tĩnh `index.html` |
+| Máy Windows thật | **CÓ**, nhưng app WPF chưa được chạy kiểm thử runtime — xem mục 5 |
 
 ## 2. ĐÃ XÁC MINH (lệnh + kết quả thật)
 

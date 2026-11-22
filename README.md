@@ -147,8 +147,9 @@ module mới.
 
 ## 9. Giới hạn đã biết (trung thực)
 
-- Toàn bộ runtime trên Windows thật **chưa kiểm chứng** (môi trường phát triển
-  là Linux) — xem `TEST-REPORT.md`. Mọi module hiển thị chip
+- Toàn bộ runtime trên Windows thật **chưa kiểm chứng** (phần lớn phát triển và
+  kiểm thử tĩnh trên Linux sandbox; bản phát hành hiện tại được build lại trên
+  Windows nhưng chưa chạy UI) — xem `TEST-REPORT.md`. Mọi module hiển thị chip
   "Beta / chưa kiểm chứng runtime".
 - Per-monitor DPI: WPF mặc định System-DPI-aware (không manifest được trong
   script) — có thể mờ khi kéo qua màn hình DPI khác nhau.
