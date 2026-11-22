@@ -3,7 +3,7 @@
 #  1) parse-check (tat ca src + dist)     2) Pester logic thuan
 #  3) smoke test M6 cua module owner
 #  Chay:  pwsh -NoProfile -File ./tests/run-tests.ps1
-#  (hoac powershell tren Windows PowerShell 5.1)
+#  (pwsh 7 tren bat ky nen tang nao; Windows PowerShell khong duoc ho tro)
 # ============================================================================
 param([switch]$SkipPester)
 
@@ -33,10 +33,20 @@ if (-not $SkipPester) {
         $cfg = New-PesterConfiguration
         $cfg.Run.Path = Join-Path $PSScriptRoot 'WinCare.Core.Tests.ps1'
         $cfg.Run.Exit = $false
+        # Pester 6 chi tra result object khi PassThru = true (Pester 5 luon tra).
+        # Truoc day khong dat -> $r rong -> fail khong bao gio dem (cang tham).
+        $cfg.Run.PassThru = $true
         $cfg.Output.Verbosity = 'Detailed'
         $r = Invoke-Pester -Configuration $cfg
-        if ($r.FailedCount -gt 0) { $fail++ }
-        Write-Output ('  Pester: {0} passed, {1} failed, {2} skipped' -f $r.PassedCount, $r.FailedCount, $r.SkippedCount)
+        if ($r) {
+            $passed = [int]$r.PassedCount; $failedCount = [int]$r.FailedCount; $skipped = [int]$r.SkippedCount
+            if ($failedCount -gt 0) { $fail++ }
+            Write-Output ('  Pester: {0} passed, {1} failed, {2} skipped' -f $passed, $failedCount, $skipped)
+        } else {
+            # Fail-closed: khong nhan duoc ket qua -> coi nhu FAIL (spec muc 6)
+            Write-Output '  CANH BAO: Invoke-Pester khong tra ket qua (kiem tra PassThru) -> coi nhu FAIL'
+            $fail++
+        }
     } else {
         Write-Output '  (Pester 5+ khong kha dung - bo qua, ghi ro trong TEST-REPORT)'
     }

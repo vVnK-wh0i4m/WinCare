@@ -137,6 +137,111 @@ Describe 'Assert-SafePath: tu choi duong dan nguy hiem (spec 2.5)' {
     }
 }
 
+Describe 'Junction/symlink: Assert-SafePath phai chan (fix 2.1 - bao cao do loi)' {
+    # Bai hoc su co: vong kiem tra reparse cu dung Combine('C:',...) -> duong dan
+    # TUONG DOI -> GetAttributes luon throw -> khong phat hien junction; dong thoi
+    # bo qua segment cuoi. Test nay tao junction/symlink that de chang hoi lai.
+    BeforeAll {
+        Initialize-WCData
+        Initialize-WCDefaultDeleteRoots
+    }
+    It 'tu choi duong dan DI QUA junction/symlink + muc junction cuoi + Remove-WCItem khong xoa thu muc moi' {
+        $base = Join-Path ([IO.Path]::GetTempPath()) ('wincare-junc-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+        $real = Join-Path $base 'real'
+        $link = Join-Path $base 'link'
+        New-Item -ItemType Directory -Path $real -Force | Out-Null
+        $bait = Join-Path $real 'tep-moi.txt'
+        Set-Content -LiteralPath $bait -Value 'du lieu quy'
+        $made = $true
+        try {
+            if ($IsWindows) {
+                New-Item -ItemType Junction -Path $link -Target $real -ErrorAction Stop | Out-Null
+            } else {
+                New-Item -ItemType SymbolicLink -Path $link -Target $real -ErrorAction Stop | Out-Null
+            }
+        } catch { $made = $false }
+        if (-not $made) {
+            Remove-Item -LiteralPath $base -Recurse -Force -ErrorAction SilentlyContinue
+            Set-ItResult -Skipped -Because 'moi truong khong tao duoc junction/symlink'
+            return
+        }
+        try {
+            # Di qua junction (segment trung gian) -> tu choi
+            Assert-SafePath (Join-Path $link 'tep-moi.txt') | Should -Be $false
+            # Chinh junction la muc xoa (segment cuoi) -> tu choi
+            Assert-SafePath $link | Should -Be $false
+            # Ham xoa duy nhat cung phai tu choi, tep moi con nguyen
+            $r = Remove-WCItem -Path (Join-Path $link 'tep-moi.txt')
+            $r.Deleted | Should -Be 0
+            (Test-Path -LiteralPath $bait) | Should -Be $true
+        } finally {
+            Remove-Item -LiteralPath $base -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+Describe 'Whitelist browser: CHI muc cache cua tung profile (fix 2.3)' {
+    # Bai hoc su co: whitelist cu chap nhan ca thu muc "User Data" / "Profiles"
+    # (chua Login Data, Cookies...) - chi can M2 sai liet ke la mat mat khau.
+    It 'Login Data / Cookies bi tu choi, thu muc cache duoc chap nhan' {
+        if (-not $IsWindows) {
+            Set-ItResult -Skipped -Because 'cau truc thu muc browser chi dung tren Windows'
+            return
+        }
+        $base = Join-Path $env:USERPROFILE ('wincare-browser-test-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+        $ud = Join-Path $base 'Google\Chrome\User Data\Default'
+        New-Item -ItemType Directory -Path (Join-Path $ud 'Cache') -Force | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $ud 'Code Cache') -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $ud 'Login Data') -Value 'mat khau'
+        $old = $env:LOCALAPPDATA
+        $env:LOCALAPPDATA = $base
+        try {
+            Initialize-WCDefaultDeleteRoots
+            # Du lieu nhay cam trong profile -> KHONG BAO GIO duoc phep xoa
+            Assert-SafePath (Join-Path $ud 'Login Data') | Should -Be $false
+            Assert-SafePath (Join-Path $ud 'Cookies') | Should -Be $false
+            # Muc cache cua profile do -> duoc chap nhan
+            Assert-SafePath (Join-Path $ud 'Cache\data_0') | Should -Be $true
+            Assert-SafePath (Join-Path $ud 'Code Cache\xay-dung') | Should -Be $true
+        } finally {
+            $env:LOCALAPPDATA = $old
+            Remove-Item -LiteralPath $base -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+Describe 'Remove-WCAllData: di qua Remove-WCItem + ton trong DRYRUN (fix 2.2)' {
+    BeforeEach {
+        Initialize-WCData
+        Load-WCSettings      # app goi trong Invoke-WCBoot; khoi tao $Script:WcSettings
+        Set-WCSetting 'dryRun' $false
+    }
+    AfterAll { Set-WCSetting 'dryRun' $false }
+    It 'che do DRYRUN -> khong xoa bat ky cai gi' {
+        $marker = Join-Path (Get-WCDataRoot) 'marker-giu-nguyen.json'
+        Set-Content -LiteralPath $marker -Value 'x'
+        Set-WCSetting 'dryRun' $true
+        { Remove-WCAllData } | Should -Not -Throw
+        (Test-Path -LiteralPath $marker) | Should -Be $true
+        Set-WCSetting 'dryRun' $false
+    }
+    It 'xoa that -> marker bien mat, cay thu muc tao lai, file log hom nay con lai' {
+        $root = Get-WCDataRoot
+        $marker = Join-Path $root 'marker-xoa.json'
+        Set-Content -LiteralPath $marker -Value 'x'
+        Write-WCLog 'INFO' 'test Remove-WCAllData'   # dam bao file log hom nay ton tai
+        Remove-WCAllData
+        (Test-Path -LiteralPath $marker) | Should -Be $false
+        # Cay thu muc chuan duoc tao lai de app van hoat dong
+        (Test-Path -LiteralPath $root) | Should -Be $true
+        foreach ($d in @('logs', 'backups', 'reports')) {
+            (Test-Path -LiteralPath (Join-Path $root $d)) | Should -Be $true
+        }
+        # File log hom nay duoc giu lai (so sanh DUNG duong dan trong thu muc logs)
+        (Test-Path -LiteralPath (Get-WCLogPath)) | Should -Be $true
+    }
+}
+
 Describe 'M6 Get-WCHealthScore: cong thuc diem minh bach (spec M6)' {
     It 'tat ca nhom diem day -> 100' {
         $g = @{

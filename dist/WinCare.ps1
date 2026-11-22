@@ -1,6 +1,6 @@
 # ==============================================================================
 #   WinCare - Trinh toi uu & kiem tra Windows (tieng Viet)
-#   Mot file PowerShell duy nhat. Chay:  irm 'https://raw.githubusercontent.com/vVnK-wh0i4m/WinCare/main/dist/WinCare.ps1' | iex   (can Admin, WPF)
+#   Mot file PowerShell duy nhat. Chay:  irm <URL> | iex   (can Admin, WPF)
 #   Ma nguon: src/*.ps1 -> build.ps1 -> dist/WinCare.ps1
 #   Khong telemetry. Quet chi doc. Moi thay doi can xac nhan + nhat ky hoan tac.
 # ==============================================================================
@@ -16,8 +16,8 @@
 # ============================================================================
 
 $Script:WcName     = 'WinCare'
-$Script:WcVersion  = '1.0.0'
-$Script:WcBuild    = 'ad25efbc'   # duoc build.ps1 thay the bang 8 ky tu dau SHA-256
+$Script:WcVersion  = '1.0.1'
+$Script:WcBuild    = '999705ba'   # duoc build.ps1 thay the bang 8 ky tu dau SHA-256
 $Script:WcSelfUrlDefault = 'https://raw.githubusercontent.com/WINCARE-PLACEHOLDER/WinCare.ps1'
 
 # iex khong nhan tham so -> moi cau hinh di qua bien moi truong (spec 2.1)
@@ -247,16 +247,37 @@ function Open-WCDataFolder {
 }
 
 function Remove-WCAllData {
-    # Nut "Xoa du lieu WinCare" (spec 2.4) - xoa toan bo logs/journal/backups/settings
+    # Nut "Xoa du lieu WinCare" (spec 2.4) - xoa toan bo logs/journal/backups/settings.
+    # RANG BUOC (fix 2.2 - bao cao do loi ben ngoai):
+    #   + Di qua Remove-WCItem (ham xoa duy nhat cua app - spec 2.5), khong goi
+    #     Remove-Item truc tiep o day.
+    #   + Ton trong che do DRYRUN: WINCARE_DRYRUN=1 -> chi ghi log, khong xoa gi.
+    #   + Giu lai file log hom nay: so sanh DUNG duong dan khi duyet thu muc logs
+    #     (vong cu so sanh muc cap 1 voi file log nam trong logs\ -> khong bao gio khop).
     $root = Get-WCDataRoot
-    if (Test-Path -LiteralPath $root) {
-        Get-ChildItem -LiteralPath $root -Force -ErrorAction SilentlyContinue | ForEach-Object {
-            # Log file dang mo boi chinh app: bo qua file log hom nay
-            if ($_.FullName -ne $Script:WcLogFile) {
-                Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-WCDryRunMode) {
+        Write-WCLog 'DRYRUN' ('[DRY-RUN] se xoa toan bo du lieu WinCare: ' + $root)
+        return
+    }
+    if (-not (Test-Path -LiteralPath $root)) { return }
+    # Dang ky chinh thu muc du lieu WinCare vao whitelist de Remove-WCItem chap nhan
+    try { Add-WCDeleteRoot $root } catch { Write-WCLog 'WARN' ('Khong dang ky duoc delete root: ' + $_.Exception.Message) }
+    $logFile = Get-WCState 'WcLogFile'
+    $logDir = $null
+    if ($logFile) { $logDir = Split-Path -Parent $logFile }
+    foreach ($item in @(Get-ChildItem -LiteralPath $root -Force -ErrorAction SilentlyContinue)) {
+        if ($logDir -and ($item.FullName -ieq $logDir)) {
+            # Thu muc logs: xoa tung muc con, GIU lai file log hom nay (app dang ghi vao)
+            foreach ($sub in @(Get-ChildItem -LiteralPath $item.FullName -Force -ErrorAction SilentlyContinue)) {
+                if ($logFile -and ($sub.FullName -ieq $logFile)) { continue }
+                $null = Remove-WCItem -Path $sub.FullName
             }
+        } else {
+            $null = Remove-WCItem -Path $item.FullName
         }
     }
+    # Tao lai cay thu muc chuan de app van hoat dong binh thuong sau khi xoa
+    Initialize-WCData
 }
 
 # ---------------------------------------------------------------------------
@@ -596,7 +617,9 @@ function Initialize-WCDefaultDeleteRoots {
         $c.Add((Join-Path $env:SystemRoot 'LiveKernelReports'))
         $c.Add((Join-Path $env:SystemRoot ('SoftwareDistribution' + '\' + 'Download')))
         $c.Add((Join-Path $env:SystemRoot ('SoftwareDistribution' + '\' + 'DeliveryOptimization')))
-        $c.Add((Join-Path $env:SystemRoot 'Windows.old'))
+        # Windows.old nam o GOC o dia he thong (C:\Windows.old), khong phai C:\Windows\Windows.old
+        $winRoot = [IO.Path]::GetPathRoot($env:SystemRoot)
+        if ($winRoot) { $c.Add((Join-Path $winRoot 'Windows.old')) }
     }
     if ($env:ProgramData) {
         $c.Add((Join-Path $env:ProgramData ('Microsoft' + '\' + 'Windows' + '\' + 'WER')))
@@ -606,12 +629,11 @@ function Initialize-WCDefaultDeleteRoots {
         $c.Add((Join-Path $env:LOCALAPPDATA 'CrashDumps'))
         $c.Add((Join-Path $env:LOCALAPPDATA 'D3DSCache'))                     # shader cache DirectX
         $c.Add((Join-Path $env:LOCALAPPDATA ('NVIDIA' + '\' + 'GLCache')))    # shader cache NVIDIA
-        $c.Add((Join-Path $env:LOCALAPPDATA ('Mozilla' + '\' + 'Firefox' + '\' + 'Profiles')))
         $c.Add((Join-Path $env:LOCALAPPDATA ('Spotify' + '\' + 'Storage')))
-        # Browser cache (CHI muc cache, tuyet doi khong cookie/mat khau/lich su)
-        foreach ($b in @('Google\Chrome','Microsoft\Edge','BraveSoftware\Brave-Browser')) {
-            $c.Add((Join-Path $env:LOCALAPPDATA ($b + '\' + 'User Data')))
-        }
+        # Browser cache: CHI dung muc cache cua tung profile (tang an toan tu liet ke
+        # doc lap - KHONG tin danh sach tu module). Tuyet doi khong chap nhan ca thu
+        # muc "User Data" hay "Profiles" vi do chua cookie/mat khau/lich su (spec 2.5)
+        foreach ($p in (Get-WCSafeBrowserCacheRoots)) { $c.Add($p) }
     }
     if ($env:APPDATA) {
         $c.Add((Join-Path $env:APPDATA ('discord' + '\' + 'Cache')))
@@ -631,6 +653,46 @@ function Test-WCPathIsReparsePoint {
         $attr = [IO.File]::GetAttributes($Path)
         return (([int]$attr -band [int][IO.FileAttributes]::ReparsePoint) -ne 0)
     } catch { return $false }
+}
+
+function Get-WCSafeBrowserCacheRoots {
+    # Liet ke CHINH XAC cac thu muc cache trinh duyet theo tung profile (fix 2.3):
+    # Chromium (Chrome/Edge/Brave): <User Data>\<Profile>\{Cache, Code Cache, GPUCache}
+    # Firefox: <Profiles>\<profile>\cache2
+    # Tang an toan tu liet ke doc lap voi module M2 (phong thu 2 lop): neu module
+    # sai liet ke thi Assert-SafePath van tu choi duong dan ngoai danh sach nay.
+    # KHONG bao gio tra ve ca thu muc "User Data" / "Profiles" (chua cookie,
+    # mat khau, lich su - doc lai se mat du lieu nguoi dung).
+    $roots = New-Object System.Collections.Generic.List[string]
+    if (-not $env:LOCALAPPDATA) { return $roots }
+    $chromium = @('Google\Chrome', 'Microsoft\Edge', 'BraveSoftware\Brave-Browser')
+    foreach ($b in $chromium) {
+        $ud = Join-Path $env:LOCALAPPDATA ($b + '\' + 'User Data')
+        if (-not (Test-Path -LiteralPath $ud -PathType Container)) { continue }
+        try {
+            foreach ($profile in [IO.Directory]::EnumerateDirectories($ud)) {
+                $name = [IO.Path]::GetFileName($profile)
+                if ($name -eq 'System Profile') { continue }
+                if ($name -eq 'Guest Profile') { continue }
+                # Chi tinh la profile neu co thu muc Cache (loai ShaderCache, Crashpad...)
+                if (-not (Test-Path -LiteralPath (Join-Path $profile 'Cache') -PathType Container)) { continue }
+                foreach ($cache in @('Cache', 'Code Cache', 'GPUCache')) {
+                    $p = Join-Path $profile $cache
+                    if (Test-Path -LiteralPath $p -PathType Container) { $roots.Add($p) }
+                }
+            }
+        } catch { }
+    }
+    $ffProfiles = Join-Path $env:LOCALAPPDATA ('Mozilla' + '\' + 'Firefox' + '\' + 'Profiles')
+    if (Test-Path -LiteralPath $ffProfiles -PathType Container) {
+        try {
+            foreach ($pf in [IO.Directory]::EnumerateDirectories($ffProfiles)) {
+                $c2 = Join-Path $pf 'cache2'
+                if (Test-Path -LiteralPath $c2 -PathType Container) { $roots.Add($c2) }
+            }
+        } catch { }
+    }
+    return $roots
 }
 
 function Assert-SafePath {
@@ -678,13 +740,31 @@ function Assert-SafePath {
                 }
             }
         } catch { }
-        # Khong di qua reparse point (junction/symlink) o bat ky cap nao
+        # Khong di qua reparse point (junction/symlink) o bat ky cap nao,
+        # TINH CA segment cuoi (fix 2.1 - bao cao do loi ben ngoai):
+        #   + Vong cu bo qua segment cuoi (-ine $fullTrim) -> junction o cuoi duoc chap nhan.
+        #   + Vong cu dung [IO.Path]::Combine('C:', 'Users') -> 'C:Users' (duong dan
+        #     TUONG DOI theo o dia) -> GetAttributes luon throw -> khong bao gio phat
+        #     hien junction o cac segment trung gian.
+        # Cach dung: dung tien to goc 'C:\' (hoac '/' tren Unix) truoc khi Combine.
+        $segs = @($full -split '[\\/]')
         $cur = ''
-        foreach ($seg in ($fullTrim -split '[\\/]')) {
+        $idx = 0
+        if (($segs.Count -gt 0) -and ($segs[0] -match '^[A-Za-z]:$')) {
+            $cur = $segs[0] + [IO.Path]::DirectorySeparatorChar
+            $idx = 1
+        } elseif ($full.StartsWith('\') -or $full.StartsWith('/')) {
+            # UNC (\\server\share) hoac goc Unix (/tmp): segment dau tien rong
+            $cur = [string][IO.Path]::DirectorySeparatorChar
+            $idx = 1
+        }
+        for (; $idx -lt $segs.Count; $idx++) {
+            $seg = $segs[$idx]
             if ([string]::IsNullOrEmpty($seg)) { continue }
-            if ($cur -eq '') { $cur = $seg } else { $cur = [IO.Path]::Combine($cur, $seg) }
-            if ((Test-WCPathIsReparsePoint $cur) -and ($cur -ine $fullTrim)) {
-                Write-WCLog 'SAFETY' ('Tu choi (junction/symlink): ' + $cur); return $false
+            $cur = [IO.Path]::Combine($cur, $seg)
+            if (Test-WCPathIsReparsePoint $cur) {
+                Write-WCLog 'SAFETY' ('Tu choi (junction/symlink): ' + $cur)
+                return $false
             }
         }
         # Phai nam trong it nhat 1 goc whitelist (khong phan biet hoa/thuong)
@@ -3749,10 +3829,19 @@ function Invoke-WCM1CloseSelected {
         $closed = 0
         foreach ($g in $s.Selected) {
             if ($ctx.Cancelled()) { break }
+            # Kiem tra LAI danh sach bao ve trong worker (fix 2.6 - bao cao do loi ben
+            # ngoai): UI chi loc luc dung danh sach; phong truong hop danh sach lac hau
+            # hoac duoc bien doi sau do (spec M1: khong bao gio dong tien trinh bao ve)
+            if (Test-WCProtectedProcess $g.Name) {
+                $ctx.Log(('Bo qua (tien trinh bao ve): ' + $g.Name))
+                continue
+            }
             $ctx.Log(('Closing: ' + $g.Name))
             foreach ($procId in $g.Ids) {
                 try {
                     $p = Get-Process -Id $procId -ErrorAction Stop
+                    # Kiem tra lai tung PID (PID co the da duoc tien trinh khac dung)
+                    if (Test-WCProtectedProcess $p.Name) { continue }
                     if (-not $s.Force) {
                         $null = $p.CloseMainWindow()
                         Start-Sleep -Milliseconds 600

@@ -1,12 +1,4 @@
-# Giữ nguyên LF cho mã nguồn/tài liệu (tránh đổi byte trên Windows).
-* text=auto eol=lf
-
-# File phát hành phải giữ NGUYÊN BYTE (sha256 trong CI sẽ fail nếu bị đổi CRLF).
-dist/WinCare.ps1 -text
-dist/WinCare.ps1.sha256 -text
-
-# Ảnh/asset nhị phân (nếu thêm sau này)
-*.png binary
-*.jpg binary
-*.ico binary
-*.zip binary
+# WinCare phat hanh dist/ bat buoc khop SHA-256 tung byte (irm | iex lay truc tiep
+# file nay). Git tren Windows mac dinh autocrlf se doi LF thanh CRLF khi checkout
+# -> lam hong kiem tra toan ven. Ep moi file giu nguyen byte cu:
+* -text

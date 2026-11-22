@@ -1,6 +1,7 @@
 {
-  "sizeBytes": 796251,
-  "lineCount": 16276,
+  "lineCount": 16365,
+  "sizeBytes": 801046,
+  "sha256": "d701c6592d41f4383867d36e625c6919a8ef9dfebe85bcd5fd38a2110865bd33",
   "sourceFiles": [
     "00-Boot.ps1",
     "01-Environment.ps1",
@@ -25,9 +26,8 @@
     "20-Settings.ps1",
     "21-Main.ps1"
   ],
-  "version": "1.0.0",
-  "name": "WinCare",
-  "builtAt": "2026-11-22T03:20:26Z",
-  "build": "ad25efbc",
-  "sha256": "f96f811ba86dc55e15580e76fb01ff52738ff1b668839034c8eec03d826c313a"
+  "builtAt": "2026-11-22T03:49:12Z",
+  "version": "1.0.1",
+  "build": "999705ba",
+  "name": "WinCare"
 }

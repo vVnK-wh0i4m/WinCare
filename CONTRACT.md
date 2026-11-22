@@ -88,9 +88,9 @@ QUÉT (chỉ đọc) → XEM LẠI (danh sách tick + rủi ro) → XÁC NHẬN 
 - KHÔNG hứa suông ("tăng X% tốc độ"), chỉ hiện số đo thật. Không dọa người dùng.
 
 ## 5. Yêu cầu riêng từng module (từ spec gốc — đọc file upload nếu cần)
-Xem prompt giao việc của bạn và đặc tả sản phẩm đi kèm dự án.
+Xem prompt giao việc của bạn. File spec gốc: `/home/z/my-project/upload/Pasted Content_1795278201019.txt`.
 
 ## 6. Kiểm chứng
-- Sau khi viết xong, chạy: `pwsh -NoProfile -File ./parse-check.ps1`
-  (chỉ được báo OK). Kiểm chứng runtime trên Windows thật theo `TEST-REPORT.md` mục 5.
+- Sau khi viết xong, chạy: `/home/z/tools/pwsh/pwsh -NoProfile -File /home/z/my-project/wincare/parse-check.ps1`
+  (chỉ được báo OK). KHÔNG chạy thử app (không có Windows).
 - Báo cáo lại: ĐÃ LÀM / GIẢ ĐỊNH / CHƯA KIỂM CHỨNG (trung thực — spec mục 1.6).

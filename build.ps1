@@ -46,7 +46,7 @@ $buildHash = $fullHash.Substring(0, 8)
 $banner = @'
 # ==============================================================================
 #   WinCare - Trinh toi uu & kiem tra Windows (tieng Viet)
-#   Mot file PowerShell duy nhat. Chay:  irm 'https://raw.githubusercontent.com/vVnK-wh0i4m/WinCare/main/dist/WinCare.ps1' | iex   (can Admin, WPF)
+#   Mot file PowerShell duy nhat. Chay:  irm <URL> | iex   (can Admin, WPF)
 #   Ma nguon: src/*.ps1 -> build.ps1 -> dist/WinCare.ps1
 #   Khong telemetry. Quet chi doc. Moi thay doi can xac nhan + nhat ky hoan tac.
 # ==============================================================================
@@ -89,7 +89,7 @@ $finalHash = ([BitConverter]::ToString($finalHashBytes)).Replace('-', '').ToLowe
 $lineCount = (@($checkText -split "`n")).Count
 $buildInfo = @{
     name = 'WinCare'
-    version = '1.0.0'
+    version = '1.0.1'
     build = $buildHash
     sha256 = $finalHash
     sizeBytes = $raw.Length

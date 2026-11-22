@@ -5,7 +5,7 @@
 # ============================================================================
 
 $Script:WcName     = 'WinCare'
-$Script:WcVersion  = '1.0.0'
+$Script:WcVersion  = '1.0.1'
 $Script:WcBuild    = '__BUILD_HASH__'   # duoc build.ps1 thay the bang 8 ky tu dau SHA-256
 $Script:WcSelfUrlDefault = 'https://raw.githubusercontent.com/WINCARE-PLACEHOLDER/WinCare.ps1'
 

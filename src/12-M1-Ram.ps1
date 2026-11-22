@@ -576,10 +576,19 @@ function Invoke-WCM1CloseSelected {
         $closed = 0
         foreach ($g in $s.Selected) {
             if ($ctx.Cancelled()) { break }
+            # Kiem tra LAI danh sach bao ve trong worker (fix 2.6 - bao cao do loi ben
+            # ngoai): UI chi loc luc dung danh sach; phong truong hop danh sach lac hau
+            # hoac duoc bien doi sau do (spec M1: khong bao gio dong tien trinh bao ve)
+            if (Test-WCProtectedProcess $g.Name) {
+                $ctx.Log(('Bo qua (tien trinh bao ve): ' + $g.Name))
+                continue
+            }
             $ctx.Log(('Closing: ' + $g.Name))
             foreach ($procId in $g.Ids) {
                 try {
                     $p = Get-Process -Id $procId -ErrorAction Stop
+                    # Kiem tra lai tung PID (PID co the da duoc tien trinh khac dung)
+                    if (Test-WCProtectedProcess $p.Name) { continue }
                     if (-not $s.Force) {
                         $null = $p.CloseMainWindow()
                         Start-Sleep -Milliseconds 600

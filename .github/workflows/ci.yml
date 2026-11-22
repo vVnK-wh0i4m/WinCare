@@ -1,8 +1,9 @@
 # CI: Kiểm chứng WinCare trên Windows thật (GitHub-hosted runner)
 # 1) Đối chiếu sha256 dist/WinCare.ps1 với .sha256 đã commit
 # 2) Parse-check toàn bộ src/ + dist/ (PowerShell 5.1 compatible)
-# 3) Build lại dist
-# 4) Pester logic (24 test) + smoke M6 (50 test)
+# 3) Build lại dist + Pester logic + smoke M6
+# 4) Đối chiếu dist sau khi build lại với bản đã commit (chống sửa dist trực tiếp
+#    rồi tự cập nhật .sha256 — rủi ro chuỗi cung ứng vì người dùng irm | iex từ dist)
 
 name: CI
 
@@ -43,3 +44,37 @@ jobs:
       - name: Parse check + Build + Pester + Smoke
         shell: pwsh
         run: .\tests\run-tests.ps1
+
+      - name: Verify dist khop voi build lai tu src (chong sua dist truc tiep)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Chan git doi LF/CRLF pha byte-cu (da co .gitattributes '* -text', day la phong thu)
+          git config core.autocrlf false
+          $ok = $true
+          # Sau run-tests.ps1, dist da duoc build lai tu src trong working tree.
+          # Moi thay doi (WinCare.ps1, .sha256, file moi...) = dist commit khong phai
+          # build tu src -> FAIL. Duy nhat build-info.json duoc phep khac MOI truong builtAt.
+          $st = @(git status --porcelain -- dist/)
+          if ($LASTEXITCODE -ne 0) { throw 'git status that bai' }
+          $unexpected = @($st | Where-Object { ($_ -replace '^[\s]*[\w?]+[\s]+', '') -ne 'dist/build-info.json' })
+          if ($unexpected.Count -gt 0) {
+            $ok = $false
+            Write-Output 'dist/ co thay doi ngoai build-info.json sau khi build lai tu src:'
+            $unexpected | ForEach-Object { Write-Output ('  ' + $_) }
+          }
+          if (Test-Path .\dist\build-info.json) {
+            $old = ((git show HEAD:dist/build-info.json) -join "`n") | ConvertFrom-Json
+            $new = Get-Content .\dist\build-info.json -Raw | ConvertFrom-Json
+            foreach ($k in @('name','version','build','sha256','sizeBytes','lineCount','sourceFiles')) {
+              if ("$($old.$k)" -ne "$($new.$k)") {
+                $ok = $false
+                Write-Output ('dist/build-info.json khac voi build tu src o truong: ' + $k)
+              }
+            }
+          }
+          if (-not $ok) {
+            throw 'dist/ khong khop voi build lai tu src/. KHONG sua dist truc tiep - hay sua src/, chay build.ps1 roi commit ca hai.'
+          }
+          Write-Output 'dist/ khop dung build tu src (WinCare.ps1 + .sha256 byte-cho-byte; build-info.json chi khac builtAt)'
+

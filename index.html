@@ -440,7 +440,7 @@
         <a href="#modules">Module</a>
         <a href="#how">Cách chạy</a>
         <a href="#requirements">Yêu cầu</a>
-        <a href="https://github.com/vVnK-wh0i4m/WinCare" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/TEN-TAI-KHOAN/wincare" target="_blank" rel="noopener noreferrer">GitHub</a>
       </nav>
     </div>
   </header>
@@ -449,7 +449,7 @@
     <!-- ===== HERO ===== -->
     <section class="hero">
       <div class="container">
-        <span class="badge">v1.0.0 · MỘT FILE POWERSHELL · KHÔNG CÀI ĐẶT</span>
+        <span class="badge">v1.0.1 · MỘT FILE POWERSHELL · KHÔNG CÀI ĐẶT</span>
         <h1>Tối ưu Windows <em>trung thực</em>,<br />hoàn tác được</h1>
         <p>
           Mở PowerShell với quyền Admin, dán một dòng lệnh — ứng dụng giao diện
@@ -461,7 +461,7 @@
         <div class="install">
           <label class="install__label" for="install-cmd">Mở PowerShell (Admin) và dán:</label>
           <div class="install__box">
-            <code id="install-cmd">irm 'https://raw.githubusercontent.com/vVnK-wh0i4m/WinCare/main/dist/WinCare.ps1' | iex</code>
+            <code id="install-cmd">irm 'https://raw.githubusercontent.com/<span class="ph">TEN-TAI-KHOAN</span>/wincare/main/dist/WinCare.ps1' | iex</code>
             <button class="copy-btn" id="copy-btn" type="button" aria-label="Sao chép lệnh cài đặt">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -470,20 +470,19 @@
             </button>
           </div>
           <p class="install__hint">
-            Lệnh trỏ đúng file phát hành trên nhánh <strong>main</strong> của
-            repo. Repo cần ở chế độ <strong>Public</strong> để
-            <code>raw.githubusercontent.com</code> phục vụ không cần token.
+            Thay <strong>TEN-TAI-KHOAN</strong> bằng tên tài khoản GitHub của
+            bạn sau khi push repo này lên GitHub.
           </p>
         </div>
 
         <div class="hero__actions">
-          <a class="btn btn--ghost" href="https://raw.githubusercontent.com/vVnK-wh0i4m/WinCare/main/dist/WinCare.ps1">
+          <a class="btn btn--ghost" href="https://raw.githubusercontent.com/TEN-TAI-KHOAN/wincare/main/dist/WinCare.ps1">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
-            Tải WinCare.ps1 (778 KB)
+            Tải WinCare.ps1 (782 KB)
           </a>
-          <a class="btn btn--ghost" href="https://github.com/vVnK-wh0i4m/WinCare" target="_blank" rel="noopener noreferrer">
+          <a class="btn btn--ghost" href="https://github.com/TEN-TAI-KHOAN/wincare" target="_blank" rel="noopener noreferrer">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.15c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.53-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.58.23 2.75.11 3.04.73.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.38-5.25 5.66.41.35.77 1.05.77 2.12v3.14c0 .3.21.67.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
             </svg>
@@ -579,10 +578,10 @@
 
         <div class="honesty">
           <strong>Trung thực với bạn:</strong> WinCare được phát triển và kiểm
-          thử tĩnh (parse, 24 test Pester logic, 50 test smoke) trên môi trường
+          thử tĩnh (parse, 28 test Pester logic, 50 test smoke) trên môi trường
           phát triển Linux — runtime trên Windows thật <strong>chưa được kiểm
           chứng</strong> và các module hiển thị chip "Beta / chưa kiểm chứng
-          runtime". Xem chi tiết trong <a href="https://github.com/vVnK-wh0i4m/WinCare/blob/main/TEST-REPORT.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-dark);font-weight:600">TEST-REPORT.md</a>.
+          runtime". Xem chi tiết trong <a href="https://github.com/TEN-TAI-KHOAN/wincare/blob/main/TEST-REPORT.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-dark);font-weight:600">TEST-REPORT.md</a>.
         </div>
       </div>
     </section>
@@ -628,8 +627,8 @@
   <footer class="footer">
     <div class="container">
       <p>
-        WinCare · Giấy phép <a href="https://github.com/vVnK-wh0i4m/WinCare/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT</a> ·
-        <a href="https://github.com/vVnK-wh0i4m/WinCare" target="_blank" rel="noopener noreferrer">Mã nguồn trên GitHub</a>
+        WinCare · Giấy phép <a href="https://github.com/TEN-TAI-KHOAN/wincare/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT</a> ·
+        <a href="https://github.com/TEN-TAI-KHOAN/wincare" target="_blank" rel="noopener noreferrer">Mã nguồn trên GitHub</a>
       </p>
       <p style="margin-top:6px; font-size:0.82rem;">
         Gỡ bỏ dấu vết: xóa thư mục %ProgramData%\WinCare (có nút "Xóa dữ liệu WinCare" trong app).

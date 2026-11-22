@@ -21,7 +21,7 @@ function Get-WCProp {
 }
 function Write-WCLog { param($Level, $Text) }
 
-. (Join-Path (Split-Path -Parent $PSScriptRoot) 'src/17-M6-Health.ps1')
+. '/home/z/my-project/wincare/src/17-M6-Health.ps1'
 
 # --- Get-WCM6Field: hashtable + PSCustomObject ---
 Assert 'Field hashtable' ((Get-WCM6Field @{ A = 5 } 'A') -eq 5)

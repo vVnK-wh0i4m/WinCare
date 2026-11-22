@@ -75,16 +75,37 @@ function Open-WCDataFolder {
 }
 
 function Remove-WCAllData {
-    # Nut "Xoa du lieu WinCare" (spec 2.4) - xoa toan bo logs/journal/backups/settings
+    # Nut "Xoa du lieu WinCare" (spec 2.4) - xoa toan bo logs/journal/backups/settings.
+    # RANG BUOC (fix 2.2 - bao cao do loi ben ngoai):
+    #   + Di qua Remove-WCItem (ham xoa duy nhat cua app - spec 2.5), khong goi
+    #     Remove-Item truc tiep o day.
+    #   + Ton trong che do DRYRUN: WINCARE_DRYRUN=1 -> chi ghi log, khong xoa gi.
+    #   + Giu lai file log hom nay: so sanh DUNG duong dan khi duyet thu muc logs
+    #     (vong cu so sanh muc cap 1 voi file log nam trong logs\ -> khong bao gio khop).
     $root = Get-WCDataRoot
-    if (Test-Path -LiteralPath $root) {
-        Get-ChildItem -LiteralPath $root -Force -ErrorAction SilentlyContinue | ForEach-Object {
-            # Log file dang mo boi chinh app: bo qua file log hom nay
-            if ($_.FullName -ne $Script:WcLogFile) {
-                Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-WCDryRunMode) {
+        Write-WCLog 'DRYRUN' ('[DRY-RUN] se xoa toan bo du lieu WinCare: ' + $root)
+        return
+    }
+    if (-not (Test-Path -LiteralPath $root)) { return }
+    # Dang ky chinh thu muc du lieu WinCare vao whitelist de Remove-WCItem chap nhan
+    try { Add-WCDeleteRoot $root } catch { Write-WCLog 'WARN' ('Khong dang ky duoc delete root: ' + $_.Exception.Message) }
+    $logFile = Get-WCState 'WcLogFile'
+    $logDir = $null
+    if ($logFile) { $logDir = Split-Path -Parent $logFile }
+    foreach ($item in @(Get-ChildItem -LiteralPath $root -Force -ErrorAction SilentlyContinue)) {
+        if ($logDir -and ($item.FullName -ieq $logDir)) {
+            # Thu muc logs: xoa tung muc con, GIU lai file log hom nay (app dang ghi vao)
+            foreach ($sub in @(Get-ChildItem -LiteralPath $item.FullName -Force -ErrorAction SilentlyContinue)) {
+                if ($logFile -and ($sub.FullName -ieq $logFile)) { continue }
+                $null = Remove-WCItem -Path $sub.FullName
             }
+        } else {
+            $null = Remove-WCItem -Path $item.FullName
         }
     }
+    # Tao lai cay thu muc chuan de app van hoat dong binh thuong sau khi xoa
+    Initialize-WCData
 }
 
 # ---------------------------------------------------------------------------
