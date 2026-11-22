@@ -1,0 +1,22 @@
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+
+# Trình soạn thảo
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log & sản phẩm chạy thử cục bộ
+*.log
+ProgramData/
+logs/
+backups/
+reports/

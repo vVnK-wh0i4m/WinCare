@@ -1,0 +1,33 @@
+{
+  "sizeBytes": 796251,
+  "lineCount": 16276,
+  "sourceFiles": [
+    "00-Boot.ps1",
+    "01-Environment.ps1",
+    "02-Data.ps1",
+    "03-L10n.ps1",
+    "04-Safety.ps1",
+    "05-Journal.ps1",
+    "06-TaskRunner.ps1",
+    "07-Query.ps1",
+    "08-Interop.ps1",
+    "09-UICore.ps1",
+    "10-Shell.ps1",
+    "11-Dashboard.ps1",
+    "12-M1-Ram.ps1",
+    "13-M2-Disk.ps1",
+    "14-M3-Driver.ps1",
+    "15-M4-Specs.ps1",
+    "16-M5-Security.ps1",
+    "17-M6-Health.ps1",
+    "18-M7-Aging.ps1",
+    "19-History.ps1",
+    "20-Settings.ps1",
+    "21-Main.ps1"
+  ],
+  "version": "1.0.0",
+  "name": "WinCare",
+  "builtAt": "2026-11-22T03:20:26Z",
+  "build": "ad25efbc",
+  "sha256": "f96f811ba86dc55e15580e76fb01ff52738ff1b668839034c8eec03d826c313a"
+}

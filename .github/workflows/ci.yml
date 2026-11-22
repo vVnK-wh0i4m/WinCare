@@ -1,0 +1,45 @@
+# CI: Kiểm chứng WinCare trên Windows thật (GitHub-hosted runner)
+# 1) Đối chiếu sha256 dist/WinCare.ps1 với .sha256 đã commit
+# 2) Parse-check toàn bộ src/ + dist/ (PowerShell 5.1 compatible)
+# 3) Build lại dist
+# 4) Pester logic (24 test) + smoke M6 (50 test)
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify dist integrity (sha256)
+        shell: pwsh
+        run: |
+          $expected = (Get-Content .\dist\WinCare.ps1.sha256 -TotalCount 1) -replace '(?i)hash=','' -replace '\s+WinCare\.ps1\s*$',''
+          $expected = $expected.Trim().ToLower()
+          $actual = (Get-FileHash .\dist\WinCare.ps1 -Algorithm SHA256).Hash.ToLower()
+          if ($expected -ne $actual) {
+            throw "dist/WinCare.ps1 khong khop sha256 (ky vong $expected, thuc te $actual). Hay chay build.ps1 va commit lai dist."
+          }
+          Write-Output "SHA256 OK: $actual"
+
+      - name: Verify no BOM (UTF-8 khong BOM bat buoc cho irm | iex)
+        shell: pwsh
+        run: |
+          $bytes = [System.IO.File]::ReadAllBytes("$PWD\dist\WinCare.ps1")
+          if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            throw "dist/WinCare.ps1 co BOM — vi pham spec phat hanh."
+          }
+          Write-Output "BOM check OK (khong co BOM)"
+
+      - name: Parse check + Build + Pester + Smoke
+        shell: pwsh
+        run: .\tests\run-tests.ps1
